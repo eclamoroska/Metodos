@@ -1,0 +1,19 @@
+        public static double Eval(string FórmulaComoTexto)
+        {
+            double Retorno;
+            string FormulaTratada = FórmulaComoTexto.Replace(",", ".");
+
+            try
+            {
+                System.Data.DataTable dtCalc = new System.Data.DataTable();
+                Object objReturn = dtCalc.Compute(FormulaTratada, "");
+
+                Retorno = Convert.ToDouble(objReturn.ToString());
+            }
+            catch
+            {
+                Retorno = double.NaN;
+            }
+
+            return Retorno;
+        }
