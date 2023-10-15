@@ -1,0 +1,68 @@
+import pandas as pd
+from datetime import datetime
+import time
+import re
+
+# Registro do tempo de início
+tempo_inicio = time.time()
+
+# Nome do arquivo de texto
+#COTAHIST_M092023
+#COTAHIST_A2023
+#COTAHIST_D13102023
+nome_arquivo = 'F:\OneDrive\Desktop\Projeto01\COTAHIST_D13102023.TXT'
+
+# Lista para armazenar os DataFrames
+dataframes = []
+
+# Abrir o arquivo de texto e ler as linhas
+with open(nome_arquivo, 'r') as arquivo:
+    linhas = arquivo.readlines()[1:-1]  # Exclui a primeira e a última linha
+
+# Capturar os 2 intervalos de dados de cada linha e armazená-los em um DataFrame
+for linha in linhas:
+
+    tipo_mercado = int(linha[25:27])
+
+    if tipo_mercado != 20: #Não importa mercado fracionado
+
+        data_pregao = datetime.strptime(linha[2:10], '%Y%m%d')
+        papeis = linha[12:24].strip()
+        empresa = linha[27:39].strip()
+        especificacao = re.sub(r'\s+', ' ', linha[39:49].strip())
+        preabe = float(linha[56:69 - 2] + '.' + linha[67:69])     #preço de abertura
+        premax = float(linha[69:82 - 2] + '.' + linha[80:82])     #preço maximo
+        premin = float(linha[82:95 - 2] + '.' + linha[93:95])     #preço minimo
+        premed = float(linha[95:108 - 2] + '.' + linha[106:108])  #preço médio
+        preult = float(linha[108:121 - 2] + '.' + linha[119:121]) #preço do último negócio do papel
+        preofc = float(linha[134:147 - 2] + '.' + linha[145:147]) #preço da melhor eferta de compra
+        totneg = int(linha[147:152])                              #numero de negócio efetuados com o papel
+        voltot = float(linha[170:188 - 2] + '.' + linha[186:188]) #volume total de titulos negociado neste papel
+
+        data = {'Data_Pregao': [data_pregao], 'Papeis': [papeis], 'Tipo_Mercado': [tipo_mercado], 'Empresa': [empresa], 'Especificacao': [especificacao], 'Preabe': [preabe], 'Premax': [premax], 'Premin': [premin], 'Premed': [premed], 'Preult': [preult], 'Preofc': [preofc], 'Totneg': [totneg], 'Voltot': [voltot]}
+        df = pd.DataFrame(data)
+        dataframes.append(df)
+
+# Concatenar os DataFrames em um único DataFrame
+df_final = pd.concat(dataframes, ignore_index=True)
+
+# Exibir o DataFrame resultante
+# print(df_final)
+df_final.to_excel('extrato_cotacoes_b3.xlsx', index=False, engine='openpyxl', sheet_name='Cotações')
+
+# Registro do tempo de término
+tempo_fim = time.time()
+
+# Calcule o tempo de execução
+tempo_execucao = tempo_fim - tempo_inicio
+
+# Converta o tempo de execução em horas, minutos e segundos
+horas, segundos = divmod(tempo_execucao, 3600)
+minutos, segundos = divmod(segundos, 60)
+
+# Formate o tempo de execução como 'hh:mm:ss'
+tempo_formatado = f'{int(horas):02d}:{int(minutos):02d}:{int(segundos):02d}'
+
+# Calcule o tempo de execução
+print(f'Linhas importadas: {len(df_final)}')
+print(f'Tempo de execução: {tempo_formatado}')
