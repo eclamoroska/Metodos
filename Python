@@ -1,0 +1,119 @@
+import pandas as pd
+from datetime import datetime
+import time
+import re
+
+# Registro do tempo de início
+tempo_inicio = time.time()
+
+# Nome do arquivo de texto
+#COTAHIST_M092023
+#COTAHIST_A2023
+#COTAHIST_D13102023
+nome_arquivo = 'F:\OneDrive\Desktop\Projeto01\COTAHIST_A2023.TXT'
+
+# Lista para armazenar os DataFrames
+dataframes = []
+
+#Lista para armazenar temporariamente os valores extraídos
+dados_temp = []
+
+#Matriz com os formatos dos campos e as delimitações para a sua captura
+indices_separacao = [[str, 2, 10],      #data do pregão
+                     [str, 12, 24],     #código do papel
+                     [int, 25, 27],     #tipo do mercado
+                     [str, 27, 39],     #nome da empresa
+                     [str, 39, 49],     #especificação do papel
+                     [float, 57, 69],   #preço de abertura
+                     [float, 70, 82],   #preço maximo
+                     [float, 83, 95],   #preço minimo
+                     [float, 96, 108],  #preço médio
+                     [float, 109, 121], #preço do último negócio do papel
+                     [float, 122, 134], #preço da melhor eferta de compra
+                     [int, 148, 152],   #numero de negócio efetuados com o papel
+                     [float, 171, 188]] #volume total de titulos negociado neste papel
+
+#Formata o campo conforme as regras
+def campo_tratado(indice, linha_completa, lim_ini, lim_fin):
+    campo_em_tratamento = ""
+    if indice == 0: #formata a data no padrão
+        campo_em_tratamento = datetime.strptime(linha_completa[lim_ini:lim_fin], '%Y%m%d')
+        return indices_separacao[indice][0](campo_em_tratamento)
+    elif indice >= 5 and indice <= 10 or indice == 12: #formata os valores dos papéis, adicionando a virgula para as casas decimais
+        campo_em_tratamento = linha_completa[lim_ini:lim_fin - 2] + '.' + linha_completa[lim_fin - 2:lim_fin]
+        return indices_separacao[indice][0](campo_em_tratamento)
+    elif indice == 4: #retira os espaços excedentes da especificação do papel
+        campo_em_tratamento = re.sub(r'\s+', ' ', linha_completa[lim_ini:lim_fin].strip())
+        return indices_separacao[indice][0](campo_em_tratamento)
+    else: #demais valores
+        campo_em_tratamento = linha_completa[lim_ini:lim_fin]
+        return indices_separacao[indice][0](campo_em_tratamento)
+
+# Abrir o arquivo de texto e ler as linhas
+with open(nome_arquivo, 'r') as arquivo:
+
+    linhas = arquivo.readlines()[1:-1]  # Exclui a primeira e a última linha
+
+#Inicia a varredura dos dados
+for linha in linhas:
+
+    tipo_mercado = int(linha[25:27])
+
+    if tipo_mercado == 10: #só importa dados do tipo de mercado à vista
+        
+        contador = 0
+        dados_temp.clear()
+
+        for indice in indices_separacao:
+            
+            limite_ini = indice[1]
+            limite_fin = indice[2]
+            campo_temp = ""
+            contador = contador + 1
+
+            #formata os números e os campos texto
+            campo_temp = campo_tratado(indice=contador - 1, linha_completa=linha, lim_ini=limite_ini, lim_fin=limite_fin)
+
+            #adiciona na tabela temporária
+            dados_temp.append(campo_temp)
+
+        dados_formatados_de_uma_linha = {'Data_Pregao':   [dados_temp[0]], 
+                                         'Papeis':        [dados_temp[1]], 
+                                         'Tipo_Mercado':  [dados_temp[2]], 
+                                         'Empresa':       [dados_temp[3]], 
+                                         'Especificacao': [dados_temp[4]], 
+                                         'Preabe': [dados_temp[5]], 
+                                         'Premax': [dados_temp[6]], 
+                                         'Premin': [dados_temp[7]], 
+                                         'Premed': [dados_temp[8]], 
+                                         'Preult': [dados_temp[9]], 
+                                         'Preofc': [dados_temp[10]], 
+                                         'Totneg': [dados_temp[11]], 
+                                         'Voltot': [dados_temp[12]]}
+
+        df = pd.DataFrame(dados_formatados_de_uma_linha)
+        dataframes.append(df)
+
+# Concatenar os DataFrames em um único DataFrame
+df_final = pd.concat(dataframes, ignore_index=True)
+
+# Exibir o DataFrame resultante
+print(df_final)
+#df_final.to_excel('extrato_cotacoes_b3.xlsx', index=False, engine='openpyxl', sheet_name='Cotações')
+
+# Registro do tempo de término
+tempo_fim = time.time()
+
+# Calcule o tempo de execução
+tempo_execucao = tempo_fim - tempo_inicio
+
+# Converta o tempo de execução em horas, minutos e segundos
+horas, segundos = divmod(tempo_execucao, 3600)
+minutos, segundos = divmod(segundos, 60)
+
+# Formate o tempo de execução como 'hh:mm:ss'
+tempo_formatado = f'{int(horas):02d}:{int(minutos):02d}:{int(segundos):02d}'
+
+# Calcule o tempo de execução
+print(f'Linhas importadas: {len(df_final)}')
+print(f'Tempo de execução: {tempo_formatado}')
