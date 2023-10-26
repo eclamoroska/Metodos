@@ -1,0 +1,35 @@
+        public static void SubCarregarListaDeCodigosBasicos()
+        {
+            string codigoMovimento, nomeTabela, tipoEquipamento, grupoAtividade, descricaoMovimento;
+            int idMovimento;
+            double tempoTMU;
+            string stringSQL = "SELECT IDTempoBase, CódigoMovimento, Tabela, Equipamento, GrupoAtividades, Descrição, TMU FROM tbl_TabelaBaseTempos;";
+
+            ListaCodigosBasicos.Clear();
+
+            OleDbConnection AdoConn = new OleDbConnection(ClasseConexao.stringConexaoSQL);
+            AdoConn.Open();
+            OleDbCommand adoCmd = new OleDbCommand(stringSQL, AdoConn);
+            OleDbDataReader adoDR = adoCmd.ExecuteReader();
+
+            while (adoDR.Read())
+            {
+                idMovimento = Convert.ToInt32(adoDR["IDTempoBase"].ToString());
+                codigoMovimento = adoDR["CódigoMovimento"].ToString();
+                nomeTabela = adoDR["Tabela"].ToString();
+                tipoEquipamento = adoDR["Equipamento"].ToString();
+                grupoAtividade = adoDR["GrupoAtividades"].ToString();
+                descricaoMovimento = adoDR["Descrição"].ToString();
+                tempoTMU = Convert.ToDouble(adoDR["TMU"].ToString());
+
+                var TemposBasicos = new Classes.CodigosBasicos { IdMovimento = idMovimento, CodigoMovimento = codigoMovimento, Tabela = nomeTabela, Equipamento = tipoEquipamento, GrupoAtividades = grupoAtividade, Descricao = descricaoMovimento, TMU = tempoTMU };
+
+                ListaCodigosBasicos.Add(TemposBasicos);
+            }
+
+            adoDR.Close();
+            adoDR.Dispose();
+            adoCmd.Dispose();
+            AdoConn.Close();
+            AdoConn.Dispose();
+        }
