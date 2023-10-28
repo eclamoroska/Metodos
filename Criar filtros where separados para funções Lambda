@@ -1,0 +1,11 @@
+Func<Classes.CodigosBasicos, bool> filtroCodigo = x => x.CodigoMovimento.StartsWith(TextoPesquisado);
+Func<Classes.CodigosBasicos, bool> filtroDescricao = x => x.Descricao.StartsWith(TextoPesquisado);
+Func<Classes.CodigosBasicos, bool> filtroTabela = x => x.Tabela.StartsWith(TextoPesquisado);
+
+var numerosPares = numeros.Where(filtroCodigo).ToList();
+var numerosPares = numeros.Where(filtroDescricao).ToList();
+var numerosPares = numeros.Where(filtroTabela).ToList();
+
+Console.WriteLine("Números pares: " + string.Join(", ", numerosPares));
+Console.WriteLine("Números ímpares: " + string.Join(", ", numerosImpares));
+Console.WriteLine("Números maiores que 5: " + string.Join(", ", numerosMaioresQue5));
