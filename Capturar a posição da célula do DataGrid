@@ -1,0 +1,1 @@
+Point pos = dataGridViewMapeamentoProcesso.PointToScreen(dataGridViewMapeamentoProcesso.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, false).Location);
