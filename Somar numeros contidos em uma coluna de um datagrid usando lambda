@@ -1,0 +1,1 @@
+double soma = NomeDataGrid.Rows.Cast<DataGridViewRow>().Where(a => a != null).Sum(row => Convert.ToDouble(row.Cells['NomeColuna'].Value));
